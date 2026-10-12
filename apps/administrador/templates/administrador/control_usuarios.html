@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Control de usuarios{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'administrador/css/gestion_cupos.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+<div class="contenedor">
+    <div class="encabezado-cupos">
+        <h2>Control de Usuarios</h2>
+    </div>
+    <hr>
+
+    <div class="fila-filtros-cupos fila-filtros-usuarios">
+        <div class="buscador-cupos-wrapper buscador-cupos-wrapper--completo">
+            <i class="bi bi-search icono-buscador"></i>
+            <input type="text" id="buscadorUsuario" placeholder="Buscar por nombre, usuario o correo..." class="form-control">
+        </div>
+    </div>
+
+    <div class="tabla">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre Completo</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td>
+                    {% if u.first_name or u.last_name %}
+                        {{ u.first_name }} {{ u.last_name }}
+                    {% else %}
+                        <span class="texto-atenuado">Sin nombre registrado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ u.username }}
+                </td>
+                <td>
+                    {% if u.rol == 'secretaria_grupo' %}
+                        Secretaria de Grupo
+                    {% else %}
+                        {{ u.rol|title }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.is_active %}
+                        <span class="badge badge-activo">Activo</span>
+                    {% else %}
+                        <span class="badge badge-inactivo">Desactivado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="acciones-usuario">
+                        <button type="button" class="btn-abrir btn-editar-usuario" 
+                            data-userid="{{ u.id }}" 
+                            data-rol="{{ u.rol }}"
+                            data-username="{{ u.username }}"
+                            data-firstname="{{ u.first_name }}"
+                            data-lastname="{{ u.last_name }}"
+                            data-email="{{ u.email }}"
+                            data-editar-usuario
+                            title="Editar Usuario">
+                            <i class="bi bi-pencil-square"></i> Editar
+                        </button>
+
+                        <button type="button" class="btn-abrir btn-toggle-usuario" 
+                            data-userid="{{ u.id }}" 
+                            data-identificador="{{ u.username }}" 
+                            data-estado="{% if u.is_active %}activo{% else %}inactivo{% endif %}"
+                            data-cambiar-estado>
+                            {% if u.is_active %}
+                                <i class="bi bi-person-dash"></i> Desactivar
+                            {% else %}
+                                <i class="bi bi-person-check"></i> Activar
+                            {% endif %}
+                        </button>
+                        {% if forloop.first %}
+                        
+                        <button type="button" class="btn-nuevo-usuario" data-abrir-modal="modalCrearUsuario">
+                            <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No hay secretarias de grupo registradas.</td>
+                <td>
+                    <button type="button" class="btn-nuevo-usuario" data-abrir-modal="modalCrearUsuario">
+                        <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    <div class="paginacion" id="paginacion-contenedor">
+        {% if usuarios.has_previous %}
+            <button type="button" data-pagina="{{ usuarios.previous_page_number }}">&lt;</button>
+        {% else %}
+            <button type="button" disabled>&lt;</button>
+        {% endif %}
+
+        {% for num in usuarios.paginator.page_range %}
+            {% if usuarios.number == num %}
+                <button type="button" class="activo" data-pagina="{{ num }}">{{ num }}</button>
+            {% else %}
+                <button type="button" data-pagina="{{ num }}">{{ num }}</button>
+            {% endif %}
+        {% endfor %}
+
+        {% if usuarios.has_next %}
+            <button type="button" data-pagina="{{ usuarios.next_page_number }}">&gt;</button>
+        {% else %}
+            <button type="button" disabled>&gt;</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalCrearUsuario">
+    <div class="modal-contenido">
+        <form method="POST" action="{% url 'administrador:crear_secretaria' %}" id="formCrearUsuario">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h2>Registrar Nueva Secretaría de Grupo</h2>
+                <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">&times;</button>
+            </div>
+            
+            <div class="modal-body modal-body--formulario">
+                <div id="contenedor-error-crear" class="contenedor-error-modal"></div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Nombre(s):</label>
+                    <input type="text" name="first_name" id="crear_first_name" class="form-control" required 
+                        placeholder="Ej. María" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo se permiten letras y espacios"
+                        data-solo-letras>
+                </div>
+                <div>
+                    <label class="etiqueta-formulario-modal">Apellidos:</label>
+                    <input type="text" name="last_name" id="crear_last_name" class="form-control" required 
+                        placeholder="Ej. Pérez Gómez" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo se permiten letras y espacios"
+                        data-solo-letras>
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Nombre de Usuario (Username):</label>
+                    <input type="text" name="username" id="crear_username" class="form-control" required placeholder="Ej. secretaria_grupo1" minlength="8" maxlength="15">
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Correo Electrónico:</label>
+                    <input type="email" name="email" id="crear_email" class="form-control" required placeholder="correo@uv.mx"
+                           oninvalid="this.setCustomValidity('Por favor, ingresa un correo electrónico válido (ejemplo: usuario@correo.com).')"
+                           oninput="this.setCustomValidity('')">
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Contraseña Temporal (8 a 15 caracteres):</label>
+                    <div class="campo-password-wrapper">
+                        <input type="password" name="password" id="crear_password" class="form-control form-control--con-icono" required 
+                            minlength="8" maxlength="15" autocomplete="new-password" placeholder="********">
+                        <button type="button" id="togglePasswordCrear" class="btn-toggle-password-usuario" aria-label="Mostrar contraseña">
+                            <i class="bi bi-eye" id="iconoOjoCrear"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-cupo">
+                <button type="button" class="btn btn-secondary" data-cerrar-modal>Cancelar</button>
+                <button type="submit" class="btn btn-success">Guardar Usuario</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalDesactivarUsuario">
+    <div class="modal-contenido">
+        <form method="POST" id="formDesactivarUsuario" data-url-base="{% url 'administrador:cambiar_estado_usuario' 0 %}">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h2>Confirmar Acción</h2>
+                <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p id="mensajeModalConfirmacion" class="texto-confirmacion-usuario">
+                    ¿Estás seguro de que deseas cambiar el estado de este usuario?
+                </p>
+            </div>
+            
+            <div class="modal-footer-cupo">
+                <button type="button" class="btn btn-secondary" data-cerrar-modal>Cancelar</button>
+                <button type="submit" class="btn btn-success" id="btnConfirmarAccion">Sí, confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditarUsuario">
+    <div class="modal-contenido">
+        <form method="POST" id="formEditarUsuario" data-url-base="{% url 'administrador:editar_usuario' 0 %}">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h2>Editar Secretaria de grupo </h2>
+                <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">&times;</button>
+            </div>
+            
+            <div class="modal-body modal-body--formulario">
+                <div id="contenedor-error-editar" class="contenedor-error-modal"></div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Nombre(s):</label>
+                    <input type="text" id="edit_first_name" name="first_name" class="form-control" required 
+                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo se permiten letras y espacios"
+                        data-solo-letras>
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Apellidos:</label>
+                    <input type="text" id="edit_last_name" name="last_name" class="form-control" required 
+                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo se permiten letras y espacios"
+                        data-solo-letras>
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Nombre de Usuario (Username):</label>
+                    <input type="text" id="edit_username" name="username" class="form-control" required 
+                           minlength="8" maxlength="15" 
+                           oninvalid="this.setCustomValidity('El nombre de usuario debe tener entre 8 y 15 caracteres.')"
+                           oninput="this.setCustomValidity('')">
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Correo Electrónico:</label>
+                    <input type="email" id="edit_email" name="email" class="form-control" required
+                           oninvalid="this.setCustomValidity('Por favor, ingresa un correo electrónico válido (ejemplo: usuario@correo.com).')"
+                           oninput="this.setCustomValidity('')">
+                </div>
+
+                <div>
+                    <label class="etiqueta-formulario-modal">Nueva Contraseña (Opcional, 8 a 15 caracteres):</label>
+                    <input type="password" name="password" id="edit_password" class="form-control" 
+                           minlength="8" maxlength="15" autocomplete="new-password" placeholder="Dejar en blanco para no cambiar">
+                </div>
+            </div>
+
+            <div class="modal-footer-cupo">
+                <button type="button" class="btn btn-secondary" data-cerrar-modal>Cancelar</button>
+                <button type="submit" class="btn btn-success">Actualizar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/solo_letras.js' %}"></script>
+<script src="{% static 'administrador/js/control_usuarios.js' %}"></script>
+{% endblock %}

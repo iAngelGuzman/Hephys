@@ -1,0 +1,29 @@
+.barra-regresar {
+  display: flex;
+  justify-content: flex-start; 
+  margin-bottom: 12px;
+}
+.btn-regresar-seccion {
+  background: #6c757d;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+.btn-regresar-seccion:hover,
+.btn-regresar-seccion:focus {
+  background: #5a6268;
+  color: #ffffff;
+  text-decoration: none;
+}
+.btn-regresar-seccion svg {
+  flex-shrink: 0;
+}

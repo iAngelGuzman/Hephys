@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Configurar Altas y Bajas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'administrador/css/tramites_administrador.css' %}" />
+{% endblock %}
+
+{% block content %}
+<section class="tramites-page">
+    <header class="page-header-fila">
+        <div>
+            <h1>Configuración de Altas y Bajas</h1>
+            <p class="descripcion">Establece las fechas y horas de apertura y cierre para que los alumnos puedan realizar sus trámites.</p>
+        </div>
+        <a href="{% url 'administrador:dashboard' %}" class="btn-regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </a>
+    </header>
+
+
+    <div class="tramites-grid">
+        <article class="tramite-card">
+            <header class="card-header">
+                Periodo de Altas
+            </header>
+
+            <div class="card-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo" value="altas">
+                    
+                    <div class="campo-formulario">
+                        <label class="etiqueta-campo">
+                            {{ form_altas.fecha_apertura.label }}
+                        </label>
+                        {{ form_altas.fecha_apertura }}
+                        {% if form_altas.fecha_apertura.errors %}
+                            <span class="error-campo">{{ form_altas.fecha_apertura.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="campo-formulario--ultimo">
+                        <label class="etiqueta-campo">
+                            {{ form_altas.fecha_cierre.label }}
+                        </label>
+                        {{ form_altas.fecha_cierre }}
+                        {% if form_altas.fecha_cierre.errors %}
+                            <span class="error-campo">{{ form_altas.fecha_cierre.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="fila-botones">
+                        <button type="submit" class="btn-solicitar btn-solicitar--flex">
+                            Guardar Horario Altas
+                        </button>
+                        <a href="{% url 'administrador:subir_oferta_pdf' %}" class="btn-solicitar btn-solicitar--accion-secundaria">
+                            <i class="bi bi-upload"></i> Subir Oferta PDF
+                        </a>
+                        <a href="{% url 'administrador:gestion_cupos' %}" class="btn-solicitar btn-solicitar--accion-secundaria">
+                            <i class="bi bi-people"></i> Gestionar Cupos
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </article>
+
+        <article class="tramite-card">
+            <header class="card-header">
+                Periodo de Bajas
+            </header>
+
+            <div class="card-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo" value="bajas">
+                    
+                    <div class="campo-formulario">
+                        <label class="etiqueta-campo">
+                            {{ form_bajas.fecha_apertura.label }}
+                        </label>
+                        {{ form_bajas.fecha_apertura }}
+                        {% if form_bajas.fecha_apertura.errors %}
+                            <span class="error-campo">{{ form_bajas.fecha_apertura.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="campo-formulario--ultimo">
+                        <label class="etiqueta-campo">
+                            {{ form_bajas.fecha_cierre.label }}
+                        </label>
+                        {{ form_bajas.fecha_cierre }}
+                        {% if form_bajas.fecha_cierre.errors %}
+                            <span class="error-campo">{{ form_bajas.fecha_cierre.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn-solicitar btn-solicitar--ancho-completo">
+                        Guardar Horario Bajas
+                    </button>
+                </form>
+            </div>
+        </article>
+    </div>
+
+    <div class="panel-calendario">
+        <h2 class="panel-calendario__titulo">Asignación de Fechas por Matrícula</h2>
+        
+        {% if form_calendario.non_field_errors %}
+            <div class="alert-error">{{ form_calendario.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <form method="POST" action="" class="form-calendario">
+            {% csrf_token %}
+            <input type="hidden" name="tipo" value="calendario_matricula">
+
+            <div>
+                <label class="etiqueta-campo-compacta">Trámite</label>
+                <div class="input-compacto input-compacto--solo-lectura">
+                    Altas
+                </div>
+            </div>
+
+            <div>
+                <label class="etiqueta-campo-compacta" for="{{ form_calendario.prefijo_matricula.id_for_label }}">Matrícula / Prefijo</label>
+                {{ form_calendario.prefijo_matricula }}
+                {% if form_calendario.prefijo_matricula.errors %}
+                    <span class="error-campo">{{ form_calendario.prefijo_matricula.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="etiqueta-campo-compacta" for="{{ form_calendario.fecha_apertura.id_for_label }}">Fecha y Hora Apertura</label>
+                {{ form_calendario.fecha_apertura }}
+                {% if form_calendario.fecha_apertura.errors %}
+                    <span class="error-campo">{{ form_calendario.fecha_apertura.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="etiqueta-campo-compacta" for="{{ form_calendario.fecha_cierre.id_for_label }}">Fecha y Hora Cierre</label>
+                {{ form_calendario.fecha_cierre }}
+                {% if form_calendario.fecha_cierre.errors %}
+                    <span class="error-campo">{{ form_calendario.fecha_cierre.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn-solicitar btn-solicitar--compacto">
+                Asignar Fecha
+            </button>
+        </form>
+
+        <table class="tabla-calendarios">
+            <thead>
+                <tr>
+                    <th>Trámite</th>
+                    <th>Matrícula / Prefijo</th>
+                    <th>Apertura</th>
+                    <th>Cierre</th>
+                    <th class="col-acciones">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cal in calendarios_matriculas %}
+                <tr>
+                    <td class="col-tramite">{{ cal.get_tipo_tramite_display }}</td>
+                    <td>{{ cal.prefijo_matricula }}</td>
+                    <td>{{ cal.fecha_apertura }}</td>
+                    <td>{{ cal.fecha_cierre }}</td>
+                    <td class="col-acciones">
+                        <form method="POST" action="" class="form-en-linea">
+                            {% csrf_token %}
+                            <input type="hidden" name="tipo" value="eliminar_calendario">
+                            <input type="hidden" name="calendario_id" value="{{ cal.id }}">
+                            <button type="submit" class="btn-eliminar">
+                                Eliminar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="fila-vacia">No hay restricciones por matrícula registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

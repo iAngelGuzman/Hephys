@@ -1,0 +1,116 @@
+:root {
+  --topbar-height: 70px;
+  --sidebar-width: 90px;
+
+  --azul: #1f5ea8;
+  --azul-claro: #c1d0e3;
+  --verde-claro: #d2ebce;
+
+  --fondo: #f7f8fb;
+  --blanco: #ffffff;
+  --texto: #1f2937;
+  --texto-secundario: #6b7280;
+  --borde: #e5e7eb;
+
+  --radio: 12px;
+  --sombra: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.contenido {
+  min-height: calc(100vh - var(--topbar-height));
+  margin-top: var(--topbar-height);
+  margin-left: var(--sidebar-width);
+
+  
+}
+
+.contenido h1 {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 36px;
+  text-align: center;
+}
+
+.filepond--root {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+.filepond--panel {
+    height: 250px !important;
+}
+
+.filepond--panel-root {
+    height: 250px !important;
+    min-height: 250px !important;
+}
+
+.filepond--drop-label {
+    height: 250px !important;
+    min-height: 250px !important;
+}
+
+.filepond--list-scroller {
+    max-height: 120px !important;
+}
+
+/* Mensajes de Django (messages.error / warning / success) */
+.mensajes {
+  max-width: 900px;
+  margin: 16px auto 0;
+  padding: 0 16px;
+}
+
+.mensaje {
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  background: var(--blanco);
+}
+
+.mensaje--error {
+  background: #fdecea;
+  border-color: #f5c2c0;
+  color: #8a1c1c;
+}
+
+.mensaje--warning {
+  background: #fff7e0;
+  border-color: #f3dca0;
+  color: #7a5a00;
+}
+
+.mensaje--success {
+  background: var(--verde-claro);
+  border-color: #b5dcae;
+  color: #1e5b16;
+}
+
+.mensaje--info {
+  background: var(--azul-claro);
+  border-color: #a9bedb;
+  color: #173f70;
+}
+
+/* Utilidad: ocultar un elemento. El JavaScript la pone y la quita
+   (mostrarElemento() en static/js/utilidades.js). */
+.oculto {
+  display: none !important;
+}

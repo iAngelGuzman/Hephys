@@ -1,0 +1,131 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crea tu cuenta - Hephys</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'usuario/css/registro.css' %}" />
+  </head>
+  <body>
+    <div class="auth-card">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold mb-2">Crea tu cuenta</h2>
+        <p class="text-muted small">
+          ¿Ya tienes tu cuenta en Hephys?
+          <a
+            href="{% url 'usuario:login' %}"
+            class="text-primary text-decoration-none fw-semibold"
+            >Inicia Sesión</a
+          >
+        </p>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %} {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 small">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label">Nombre(s)</label>
+          {{ form.nombres }} {% if form.nombres.errors %}
+          <div class="text-danger small mt-1">{{ form.nombres.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Apellido Paterno</label>
+            {{ form.apellido_paterno }} {% if form.apellido_paterno.errors %}
+            <div class="text-danger small mt-1">
+              {{ form.apellido_paterno.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Apellido Materno</label>
+            {{ form.apellido_materno }} {% if form.apellido_materno.errors %}
+            <div class="text-danger small mt-1">
+              {{ form.apellido_materno.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Programa Educativo</label>
+          {{ form.carrera }} {% if form.carrera.errors %}
+          <div class="text-danger small mt-1">{{ form.carrera.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Semestre</label>
+          {{ form.semestre }} {% if form.semestre.errors %}
+          <div class="text-danger small mt-1">{{ form.semestre.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Matrícula</label>
+            {{ form.matricula }} {% if form.matricula.errors %}
+            <div class="text-danger small mt-1">
+              {{ form.matricula.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Contraseña</label>
+            <div class="input-group">
+              {{ form.password }}
+              <button class="btn btn-outline-secondary" type="button" data-mostrar-password="id_password" aria-label="Mostrar contraseña">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            {% if form.password.errors %}
+            <div class="text-danger small mt-1">
+              {{ form.password.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Secretario(a) de Grupo</label>
+          {{ form.secretaria }} {% if form.secretaria.errors %}
+          <div class="text-danger small mt-1">
+            {{ form.secretaria.errors.0 }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary-custom">
+            Registrarse
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="modal-overlay {% if exito %}mostrar{% endif %}">
+      <div class="modal-contenido">
+        <h3>¡Cuenta creada con éxito!</h3>
+        <p>Tu registro se ha completado correctamente. Ya puedes iniciar sesión en Hephys.</p>
+        <a href="{% url 'usuario:login' %}" class="btn btn-primary-custom btn-exito-modal">
+          Ir a Iniciar Sesión
+        </a>
+      </div>
+    </div>
+
+    <script src="{% static 'usuario/js/mostrar_password.js' %}"></script>
+    <script src="{% static 'js/solo_letras.js' %}"></script>
+    <script src="{% static 'usuario/js/registro.js' %}"></script>
+  </body>
+</html>

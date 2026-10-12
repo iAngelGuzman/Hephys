@@ -1,0 +1,123 @@
+{% comment %}
+Modal con el detalle de una solicitud. Lo usan las listas del alumno, de la
+secretaria de grupo y de la Secretaría Académica.
+
+Uso:
+  {% include "solicitud/componentes/modal_detalle.html" with con_estudiante=True con_acciones=True %}
+
+- con_estudiante: muestra la sección "Datos del estudiante" (no se muestra al alumno).
+- con_acciones:   muestra los botones Aprobar / Rechazar (solo en listas de pendientes;
+                  requiere también incluir "solicitud/componentes/modales_acciones.html").
+
+Los datos se llenan con solicitud/js/detalle_solicitud.js a partir del JSON
+que deja la vista con |json_script:"solicitudes-data".
+{% endcomment %}
+<div
+  id="modalSolicitud"
+  class="modal-overlay"
+  data-url-horario="{% url 'estudiante:ver_horario_pdf' 0 %}"
+  data-url-comprobante="{% url 'estudiante:ver_comprobante_pdf' %}"
+  data-url-documento-medico="{% url 'estudiante:ver_documento_medico' 0 %}"
+>
+  <div class="modal-contenido">
+    <div class="modal-header">
+      <div>
+        <h2>Información de la solicitud</h2>
+        <p id="modalFolio">Folio</p>
+      </div>
+      <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      {% if con_estudiante %}
+      <div class="modal-seccion">
+        <h3>Datos del estudiante</h3>
+        <div class="modal-grid">
+          <div class="dato">
+            <span>Nombre completo</span>
+            <strong id="modalNombre">-</strong>
+          </div>
+          <div class="dato">
+            <span>Matrícula</span>
+            <strong id="modalMatricula">-</strong>
+          </div>
+          <div class="dato">
+            <span>Programa educativo</span>
+            <strong id="modalCarrera">-</strong>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="modal-seccion">
+        <h3>Datos del trámite</h3>
+        <div class="modal-grid">
+          <div class="dato">
+            <span>Tipo de trámite</span>
+            <strong id="modalTipo">-</strong>
+          </div>
+          <div class="dato" data-dato-materia>
+            <span>Experiencia Educativa</span>
+            <strong id="modalMateria">-</strong>
+          </div>
+          <div class="dato" data-dato-materia>
+            <span>NRC de la materia</span>
+            <strong id="modalNrc">-</strong>
+          </div>
+          <div class="dato" data-dato-materia>
+            <span>Maestro / Docente</span>
+            <strong id="modalMaestro">-</strong>
+          </div>
+          <div class="dato" data-dato-materia>
+            <span>Estatus de inscripción</span>
+            <strong id="modalInscripcion">-</strong>
+          </div>
+          <div class="dato" data-dato-justificante>
+            <span>Días de inasistencia</span>
+            <strong id="modalInasistencia">-</strong>
+          </div>
+          <div class="dato" data-dato-justificante>
+            <span>Días autorizados</span>
+            <strong id="modalDiasAutorizados">-</strong>
+          </div>
+          <div class="dato" data-dato-pago>
+            <span>Folio de pago</span>
+            <strong id="modalFolioPago">-</strong>
+          </div>
+          <div class="dato">
+            <span>Fecha de solicitud</span>
+            <strong id="modalFecha">-</strong>
+          </div>
+          <div class="dato">
+            <span>Estado</span>
+            <strong id="modalEstado">-</strong>
+          </div>
+          <div class="dato dato--completo oculto" id="contenedorMotivoBaja">
+            <span id="etiquetaMotivo">Motivo de la baja</span>
+            <strong id="modalMotivoBaja">-</strong>
+          </div>
+          <div class="dato dato--completo oculto" id="contenedorObservaciones">
+            <span>Observaciones</span>
+            <strong id="modalObservaciones">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-seccion">
+        <h3>Documentos</h3>
+        <div class="documentos" id="modalDocumentosContenedor">
+          <p class="documentos-vacio">No hay documentos adjuntos para esta solicitud.</p>
+        </div>
+      </div>
+    </div>
+
+    {% if con_acciones %}
+    <div class="modal-footer">
+      <button type="button" class="btn-rechazar" id="btnAbrirRechazo">Rechazar</button>
+      <button type="button" class="btn-aprobar" id="btnAbrirAprobacion">Aprobar</button>
+    </div>
+    {% endif %}
+  </div>
+</div>

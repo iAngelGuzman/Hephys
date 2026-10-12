@@ -1,0 +1,41 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bases de datos locales (SQLite y sus respaldos: contienen datos personales)
+*.sqlite3
+*.sqlite3-journal
+*.db
+
+# Variables de entorno
+.env
+
+# Archivos de editor
+.vscode/
+.idea/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de pruebas y cobertura
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Volcados de base de datos y fixtures con datos reales (contienen PII)
+*.sql
+datos.json
+
+# Documentos subidos por alumnos (horarios y papeletas)
+Papeles/
+media/
+
+# Salida de `collectstatic` (se genera en el deploy, nunca se versiona)
+staticfiles/

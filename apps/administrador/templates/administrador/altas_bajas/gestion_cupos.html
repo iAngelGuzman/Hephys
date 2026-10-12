@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestión de cupos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'administrador/css/gestion_cupos.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+<div class="contenedor">
+    <div class="encabezado-cupos">
+        <h2>Gestión de Cupos - Oferta Educativa</h2>
+
+        <a href="{% url 'administrador:configurar_altas_bajas' %}" class="btn-regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </a>
+    </div>
+    <hr>
+
+
+    <div class="fila-filtros-cupos">
+        <div class="buscador-cupos-wrapper">
+            <i class="bi bi-search icono-buscador"></i>
+            <input type="text" id="buscadorOferta" placeholder="Buscar por NRC, Experiencia, Carrera o Docente..." 
+                class="form-control"
+                value="{{ busqueda_seleccionada }}">
+        </div>
+
+        <div class="filtro-carrera-wrapper">
+            <select id="filtroCarrera" class="form-control">
+                <option value="">Todas las carreras</option>
+                {% for valor, nombre in carreras %}
+                <option value="{{ valor }}" {% if carrera_seleccionada == valor %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="tabla">
+        <table class="table" id="tablaOfertas">
+            <thead>
+                <tr>
+                    <th>NRC</th>
+                    <th>Experiencia Educativa</th>
+                    <th>Carrera</th>
+                    <th>Docente</th>
+                    <th>Cupo Actual</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ofertas %}
+                <tr>
+                    <td>{{ item.nrc }}</td>
+                    <td>{{ item.experiencia_educativa.nombre }}</td>
+                    <td data-carrera="{{ item.carrera|default:item.experiencia_educativa.carrera }}">{{ item.carrera|default:item.experiencia_educativa.carrera }}</td>
+                    <td>{{ item.docente }}</td>
+                    <td><span class="badge-cupo" id="badge-cupo-{{ item.nrc }}">{{ item.cupo }}</span></td>
+                    <td>
+                        <button type="button" class="btn-abrir" data-ajustar-cupo 
+                            data-nrc="{{ item.nrc }}" 
+                            data-nombre="{{ item.experiencia_educativa.nombre }}" 
+                            data-cupo="{{ item.cupo }}">
+                            <i class="bi bi-pencil-square"></i> Ajustar Cupo
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay experiencias educativas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="paginacion" id="paginacion-contenedor">
+        {% if ofertas.has_previous %}
+            <button type="button" data-pagina="{{ ofertas.previous_page_number }}">&lt;</button>
+        {% else %}
+            <button type="button" disabled>&lt;</button>
+        {% endif %}
+
+        {% for num in ofertas.paginator.page_range %}
+            {% if ofertas.number == num %}
+                <button type="button" class="activo" data-pagina="{{ num }}">{{ num }}</button>
+            {% else %}
+                <button type="button" data-pagina="{{ num }}">{{ num }}</button>
+            {% endif %}
+        {% endfor %}
+
+        {% if ofertas.has_next %}
+            <button type="button" data-pagina="{{ ofertas.next_page_number }}">&gt;</button>
+        {% else %}
+            <button type="button" disabled>&gt;</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalCupo">
+    <div class="modal-contenido">
+        <form method="POST" class="form-modal-cupo" id="formModalCupo" data-cupo-maximo="{{ cupo_maximo }}">
+            {% csrf_token %}
+            <input type="hidden" name="carrera" id="modal-input-carrera">
+            <input type="hidden" name="q" id="modal-input-q">
+            <input type="hidden" name="page" id="modal-input-page">
+            
+            <div class="modal-header">
+                <div>
+                    <h2>Modificar Cupo</h2>
+                    <p id="modal-nombre-ee"></p>
+                </div>
+                <button type="button" class="modal-cerrar" data-cerrar-modal aria-label="Cerrar">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="alertaModalCupo" class="alert alert-danger alerta-cupo oculto">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>El cupo máximo permitido para una experiencia educativa es de {{ cupo_maximo }}.</span>
+                </div>
+
+                <input type="hidden" name="nrc" id="modal-nrc">
+                
+                <div class="modal-seccion">
+                    <h3>Detalles de la Oferta</h3>
+                    <div class="modal-grid">
+                        <div class="dato">
+                            <span>Número de Control (NRC)</span>
+                            <strong id="modal-nrc-label">---</strong>
+                        </div>
+                        <div class="dato">
+                            <span>Nuevo Número de Cupos</span>
+                            <input type="number" class="form-control" name="cupo" id="modal-input-cupo" required min="0" max="{{ cupo_maximo }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer-cupo">
+                <button type="button" class="btn btn-secondary btn-cancelar-cupo" data-cerrar-modal>Cancelar</button>
+                <button type="submit" class="btn btn-success btn-guardar-cupo">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/gestion_cupos.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %} {% load static %} {% block title %} Lista
+de solicitudes {% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'solicitud/css/lista_solicitudes.css' %}" />
+{% endblock %} {% block content %}
+
+<div class="contenedor">
+  <h1>Lista de solicitudes</h1>
+
+  <div class="filtros">
+    <div class="campo">
+      <label>Buscar por trámite, folio o matrícula</label>
+      <input type="text" id="buscarSolicitud" placeholder="Buscar..." />
+    </div>
+
+    <div class="campo">
+      <label>Tipo de trámite</label>
+      <select id="filtroTipo">
+        <option value="">Todos</option>
+        <option value="extraordinario">Extraordinario</option>
+        <option value="suficiencia">Título de suficiencia</option>
+        <option value="baja">
+          Baja de Experiencias Educativas
+        </option>
+        <option value="alta">
+          Alta de Experiencias Educativas
+        </option>
+        <option value="constancia">Constancia de Estudios</option>
+        <option value="justificante">Justificante Médico</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Estado</label>
+      <select id="filtroEstado">
+        <option value="">Todos</option>
+        <option value="aceptada">Aceptada</option>
+        <option value="rechazada">Rechazada</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn-limpiar" id="btnLimpiar">
+      Limpiar filtros
+    </button>
+  </div>
+
+  <div class="simbologia-tramites">
+    <span class="simbologia-titulo">Simbología de trámites:</span>
+    <div class="simbologia-items">
+      <span class="item-simbologia"
+        ><span class="punto-color azul"></span> Extraordinario</span
+      >
+      <span class="item-simbologia"
+        ><span class="punto-color morado"></span> Bajas</span
+      >
+      <span class="item-simbologia"
+        ><span class="punto-color rosa"></span> Altas</span
+      >
+      <span class="item-simbologia"
+        ><span class="punto-color naranja"></span> Constancias</span
+      >
+      <span class="item-simbologia"
+        ><span class="punto-color turquesa"></span> Justificantes</span
+      >
+      <span class="item-simbologia"
+        ><span class="punto-color verde"></span> Suficiencia</span
+      >
+    </div>
+  </div>
+
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Folio</th>
+          <th>Matrícula</th>
+          <th>Nombre del estudiante</th>
+          <th>Fecha</th>
+          <th>Tipo de trámite</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+
+      <tbody id="tablaSolicitudes">
+        {% for solicitud in solicitudes %}
+        <tr
+          data-tipo="{{ solicitud.tipo_tramite }}"
+          data-estado="{{ solicitud.estado }}"
+          data-matricula="{% if solicitud.estudiante %}{{ solicitud.estudiante.matricula }}{% else %}sin-asignar{% endif %}"
+        >
+          <td>S{{ solicitud.id|stringformat:"05d" }}</td>
+
+          <td>
+            {% if solicitud.estudiante %} {{ solicitud.estudiante.matricula }}
+            {% else %} - {% endif %}
+          </td>
+
+          <td>
+            {{ solicitud.estudiante.nombres }}
+            {{ solicitud.estudiante.apellido_paterno }}
+            {{ solicitud.estudiante.apellido_materno }}
+          </td>
+
+          <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+
+          <td>
+            <span
+              class="badge {% if solicitud.tipo_tramite == 'extraordinario' %} azul {% elif solicitud.tipo_tramite == 'baja' %} morado {% elif solicitud.tipo_tramite == 'alta' %} rosa {% elif solicitud.tipo_tramite == 'constancia' %} naranja {% elif solicitud.tipo_tramite == 'justificante' %} turquesa {% else %} verde {% endif %}"
+            >
+              {{ solicitud.get_tipo_tramite_display }}
+            </span>
+          </td>
+
+          <td>
+            <span
+              class="badge {% if solicitud.estado == 'aceptada' %} verde {% elif solicitud.estado == 'rechazada' %} rojo {% endif %}"
+            >
+              {{ solicitud.get_estado_display }}
+            </span>
+          </td>
+
+          <td>
+            <button
+              type="button"
+              class="btn-abrir"
+              data-abrir-solicitud="{{ solicitud.id }}"
+            >
+              Ver detalles
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7">No hay solicitudes en el historial.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer-tabla">
+    <p>Mostrando solicitudes</p>
+
+    <div class="paginacion">
+      <button type="button">&lt;</button>
+      <button type="button" class="activo">1</button>
+      <button type="button">&gt;</button>
+    </div>
+  </div>
+</div>
+
+{% include "solicitud/componentes/modal_detalle.html" with con_estudiante=True con_acciones=False %}
+
+{{ solicitudes_json|json_script:"solicitudes-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'solicitud/js/detalle_solicitud.js' %}"></script>
+<script src="{% static 'solicitud/js/tabla_solicitudes.js' %}"></script>
+{% endblock %}

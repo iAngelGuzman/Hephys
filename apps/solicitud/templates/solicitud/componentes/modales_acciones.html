@@ -1,0 +1,115 @@
+{% csrf_token %}
+
+<div
+  class="modal-overlay"
+  id="modalConfirmacion"
+  data-url-aprobar="{{ url_aprobar }}"
+  data-url-rechazar="{{ url_rechazar }}"
+  data-rol="{% if autoriza_dias %}academica{% else %}grupo{% endif %}"
+>
+  <div class="modal-contenido modal-contenido--confirmacion">
+    <div class="modal-header modal-header--confirmacion">
+      <h2>¿Estás seguro de aprobar esta solicitud?</h2>
+    </div>
+
+    {# acciones_solicitud.js cambia este texto en las constancias. #}
+    <p class="texto-confirmacion" id="textoConfirmacion">
+      Esta acción cambiará el estado de la solicitud y no se podrá deshacer.
+      ¿Deseas aprobar la solicitud?
+    </p>
+
+    {% if autoriza_dias %}
+    <div class="dias-autorizados oculto" id="seccionDiasAutorizados">
+      <p class="dias-autorizados__titulo">Días que autorizas para el justificante</p>
+      <p class="dias-autorizados__ayuda">
+        El alumno solicitó: <strong id="diasSolicitados">-</strong>.
+        Puedes autorizar todos o solo algunos de esos días.
+      </p>
+      <div class="dias-autorizados__campos">
+        <label>
+          Desde
+          <input type="date" id="diasAutorizadosDesde" />
+        </label>
+        <label>
+          Hasta
+          <input type="date" id="diasAutorizadosHasta" />
+        </label>
+      </div>
+      <p class="alerta-motivo-vacio oculto" id="alertaDiasAutorizados"></p>
+    </div>
+    {% endif %}
+
+    <div class="modal-footer modal-footer--centrado">
+      <button type="button" class="btn-cerrar-modal" id="btnCancelarAprobacion">Cancelar</button>
+      <button type="button" class="btn-aprobar" id="btnConfirmarAprobacion">Sí, aprobar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalConfirmacionRechazo">
+  <div class="modal-contenido">
+    <div class="modal-header">
+      <h2>Motivo del rechazo</h2>
+    </div>
+
+    <p class="texto-motivo-rechazo">
+      Por favor, selecciona los motivos por los cuales se está rechazando esta
+      solicitud. El estudiante podrá ver estas observaciones.
+    </p>
+    <div id="alertaMotivoVacio" class="alerta-motivo-vacio oculto">
+      Debes seleccionar al menos un motivo de rechazo.
+    </div>
+
+    <div class="campo contenedor-motivos" id="contenedorMotivos">
+      <label class="motivo-rechazo-label">
+        <input type="checkbox" name="motivo_rechazo" value="Documentación incompleta o ilegible" />
+        Documentación incompleta o ilegible
+      </label>
+      <label class="motivo-rechazo-label">
+        <input type="checkbox" name="motivo_rechazo" value="Documentación no concuerda con los datos del alumno" />
+        Documentación no concuerda con los datos del alumno
+      </label>
+      <label class="motivo-rechazo-label">
+        <input type="checkbox" name="motivo_rechazo" value="No cumple con los requisitos del trámite" />
+        No cumple con los requisitos del trámite
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="alta">
+        <input type="checkbox" name="motivo_rechazo" value="Cupo agotado en la experiencia educativa" />
+        Cupo agotado en la experiencia educativa
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="alta">
+        <input type="checkbox" name="motivo_rechazo" value="Cruce de horarios con otra materia inscrita" />
+        Cruce de horarios con otra materia inscrita
+      </label>
+      <label class="motivo-rechazo-label">
+        <input type="checkbox" name="motivo_rechazo" value="Error en el tipo de inscripción o datos proporcionados" />
+        Error en el tipo de inscripción o datos proporcionados
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="constancia">
+        <input type="checkbox" name="motivo_rechazo" value="El alumno no está inscrito en el periodo escolar actual" />
+        El alumno no está inscrito en el periodo escolar actual
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="constancia">
+        <input type="checkbox" name="motivo_rechazo" value="La papeleta no corresponde al arancel de la constancia" />
+        La papeleta no corresponde al arancel de la constancia
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="justificante">
+        <input type="checkbox" name="motivo_rechazo" value="Fuera del plazo de 5 días hábiles" />
+        Fuera del plazo de 5 días hábiles
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="justificante">
+        <input type="checkbox" name="motivo_rechazo" value="Comprobante médico no válido o de una institución no reconocida" />
+        Comprobante médico no válido o de una institución no reconocida
+      </label>
+      <label class="motivo-rechazo-label" data-solo-tramite="justificante">
+        <input type="checkbox" name="motivo_rechazo" value="Las fechas no coinciden con el comprobante médico" />
+        Las fechas no coinciden con el comprobante médico
+      </label>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cerrar-modal" id="btnCancelarRechazo">Cancelar</button>
+      <button type="button" class="btn-rechazar" id="btnConfirmarRechazo">Sí, rechazar</button>
+    </div>
+  </div>
+</div>

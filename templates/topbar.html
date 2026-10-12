@@ -1,0 +1,66 @@
+{% load static %}
+
+<header class="topbar">
+  <div class="user-box">
+    <span class="usuario">
+      {% if user.perfil_estudiante %}
+        {{ user.perfil_estudiante.nombres }} {{ user.perfil_estudiante.apellido_paterno }} {{ user.perfil_estudiante.apellido_materno }}
+      {% else %}
+        {{ user.first_name }} {{ user.last_name }}
+      {% endif %}
+    </span>
+
+    <div class="user-menu">
+      <button
+        type="button"
+        class="topbar-icon"
+        id="btnMenuUsuario"
+        aria-label="Menú de usuario"
+        aria-haspopup="true"
+      >
+        <img
+          src="{% static 'icons/people.png' %}"
+          alt="Perfil"
+          width="24"
+          height="24"
+        />
+      </button>
+
+      <div id="userDropdown" class="user-dropdown">
+        <div class="user-dropdown-header">
+          <img
+            src="{% static 'icons/people.png' %}"
+            alt="Perfil"
+            class="user-dropdown-avatar"
+          />
+
+          <p class="user-dropdown-name">
+            {% if user.perfil_estudiante %}
+              {{ user.perfil_estudiante.nombres }} {{ user.perfil_estudiante.apellido_paterno }} {{ user.perfil_estudiante.apellido_materno }}
+            {% else %}
+              {{ user.first_name }} {{ user.last_name }}
+            {% endif %}
+          </p>
+
+          <p class="user-dropdown-rol">{{ user.get_rol_display }}</p>
+        </div>
+
+        <hr class="user-dropdown-divider" />
+
+        <form method="POST" action="{% url 'usuario:logout' %}">
+          {% csrf_token %}
+
+          <button type="submit" class="logout-link">
+            <img
+              src="{% static 'icons/log-out.png' %}"
+              alt=""
+              class="logout-icon"
+            />
+
+            Cerrar sesión
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>

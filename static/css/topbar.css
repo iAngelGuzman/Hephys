@@ -1,0 +1,151 @@
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  height: var(--topbar-height);
+  padding: 0 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  background: linear-gradient(to right, #c0cee4, #c0dfbc);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    padding-top: 11px;
+}
+
+.topbar-icon {
+  width: 10px;
+  height: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.topbar-icon:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.topbar-icon img {
+  width: 50px;
+  height: 50px;
+  display: block;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  margin-left: auto;
+}
+
+.usuario {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-right: 20px;
+}
+
+.user-menu {
+  position: relative; 
+}
+
+.topbar-icon {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.user-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 60px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  min-width: 260px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.user-dropdown.show {
+  display: block;
+}
+
+.user-dropdown-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 24px 16px;
+  background: #e8eaf9;
+}
+
+.user-dropdown-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: white;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.user-dropdown-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-dropdown-rol {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.user-dropdown-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+.user-dropdown .logout-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  color: #333;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.user-dropdown .logout-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.user-dropdown .logout-link:hover {
+  background-color: #f2f2f2;
+}

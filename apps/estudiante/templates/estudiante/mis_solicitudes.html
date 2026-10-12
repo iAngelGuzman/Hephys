@@ -1,0 +1,146 @@
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block title %}{% if es_historial %}Historial de solicitudes{% else %}Mis solicitudes{% endif %}{% endblock %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'solicitud/css/lista_solicitudes.css' %}" />
+{% endblock %} 
+
+{% block content %}
+<div class="contenedor">
+  {# Esta plantilla sirve para "Mis solicitudes" (en trámite) y para el "Historial" (terminadas). #}
+  {% if es_historial %}
+  <h1>Historial de solicitudes</h1>
+  <p class="subtitulo-lista">Solicitudes que ya fueron aceptadas o rechazadas.</p>
+  {% else %}
+  <h1>Mis solicitudes</h1>
+  <p class="subtitulo-lista">Solicitudes que siguen en trámite. Cuando se acepten o rechacen pasarán a tu <a href="{% url 'estudiante:historial_solicitudes' %}">historial</a>.</p>
+  {% endif %}
+
+  <form method="GET" action="{% if es_historial %}{% url 'estudiante:historial_solicitudes' %}{% else %}{% url 'estudiante:mis_solicitudes' %}{% endif %}" class="filtros" id="filtros">
+    <div class="campo">
+      <label for="busqueda">Buscar por folio o experiencia</label>
+      <input
+        type="text"
+        name="busqueda"
+        id="busqueda"
+        placeholder="Buscar..."
+        value="{{ busqueda|default:'' }}"
+      />
+    </div>
+
+    <div class="campo">
+      <label for="tipo">Tipo de trámite</label>
+      <select name="tipo" id="tipo">
+        <option value="">Todos</option>
+        <option value="extraordinario" {% if tipo == "extraordinario" %}selected{% endif %}>Extraordinario</option>
+        <option value="suficiencia" {% if tipo == "suficiencia" %}selected{% endif %}>Título de suficiencia</option>
+        <option value="baja" {% if tipo == "baja" %}selected{% endif %}>Bajas de Experiencias Educativas</option>
+        <option value="alta" {% if tipo == "alta" %}selected{% endif %}>Alta de Experiencias Educativas</option>
+        <option value="constancia" {% if tipo == "constancia" %}selected{% endif %}>Constancia de Estudios</option>
+        <option value="justificante" {% if tipo == "justificante" %}selected{% endif %}>Justificante Médico</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="estado">Estado</label>
+      <select name="estado" id="estado">
+        <option value="">Todos</option>
+        {% for valor, nombre in opciones_estado %}
+        <option value="{{ valor }}"{% if estado == valor %} selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  <div class="simbologia-tramites">
+    <span class="simbologia-titulo">Simbología de trámites:</span>
+    <div class="simbologia-items">
+      <span class="item-simbologia"><span class="punto-color azul"></span> Extraordinario</span>
+      <span class="item-simbologia"><span class="punto-color morado"></span> Bajas</span>
+      <span class="item-simbologia"><span class="punto-color rosa"></span> Altas</span>
+      <span class="item-simbologia"><span class="punto-color naranja"></span> Constancias</span>
+      <span class="item-simbologia"><span class="punto-color turquesa"></span> Justificantes</span>
+      <span class="item-simbologia"><span class="punto-color verde"></span> Suficiencia</span>
+    </div>
+  </div>
+
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Folio</th>
+          <th>Tipo de trámite</th>
+          <th>Fecha de solicitud</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+
+      <tbody id="tabla-solicitudes">
+        {% for solicitud in solicitudes %}
+        <tr>
+          <td>S{{ solicitud.id|stringformat:"05d" }}</td>
+          <td>
+            <span class="badge {% if solicitud.tipo_tramite == 'extraordinario' %} azul {% elif solicitud.tipo_tramite == 'baja' %} morado {% elif solicitud.tipo_tramite == 'alta' %} rosa {% elif solicitud.tipo_tramite == 'constancia' %} naranja {% elif solicitud.tipo_tramite == 'justificante' %} turquesa {% else %} verde {% endif %}">
+              {{ solicitud.get_tipo_tramite_display }}
+            </span>
+          </td>
+          <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+          <td>
+            <span class="badge {% if solicitud.estado == 'pendiente' or solicitud.estado == 'pendiente_academica' or solicitud.estado == 'pendiente_firma' %} amarillo {% elif solicitud.estado == 'aceptada' %} verde {% elif solicitud.estado == 'rechazada' or solicitud.estado == 'rechazada_academica' %} rojo {% endif %}">
+              {{ solicitud.get_estado_display }}
+            </span>
+          </td>
+          <td>
+            <button type="button" class="btn-abrir" data-abrir-solicitud="{{ solicitud.id }}">
+              Abrir
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">{% if es_historial %}Todavía no tienes solicitudes terminadas.{% else %}No tienes solicitudes en trámite.{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer-tabla">
+    <p id="texto-resultados">Mostrando {{ solicitudes.object_list|length }} de {{ solicitudes.paginator.count }} resultados</p>
+
+    <div class="paginacion" id="paginacion-contenedor">
+      {% if solicitudes.has_previous %}
+        <button type="button" data-pagina="{{ solicitudes.previous_page_number }}">&lt;</button>
+      {% else %}
+        <button type="button" disabled>&lt;</button>
+      {% endif %}
+
+      {% for num in solicitudes.paginator.page_range %}
+        {% if solicitudes.number == num %}
+          <button type="button" class="activo" data-pagina="{{ num }}">{{ num }}</button>
+        {% else %}
+          <button type="button" data-pagina="{{ num }}">{{ num }}</button>
+        {% endif %}
+      {% endfor %}
+
+      {% if solicitudes.has_next %}
+        <button type="button" data-pagina="{{ solicitudes.next_page_number }}">&gt;</button>
+      {% else %}
+        <button type="button" disabled>&gt;</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% include "solicitud/componentes/modal_detalle.html" with con_estudiante=False con_acciones=False %}
+
+{{ solicitudes_json|json_script:"solicitudes-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'solicitud/js/detalle_solicitud.js' %}"></script>
+<script src="{% static 'estudiante/js/mis_solicitudes.js' %}"></script>
+{% endblock %}

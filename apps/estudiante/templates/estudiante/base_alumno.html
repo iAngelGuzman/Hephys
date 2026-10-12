@@ -1,0 +1,49 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{% block title %} Sistema de Solicitudes {% endblock %}</title>
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/base.css' %}?v={{ STATIC_VERSION }}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/topbar.css' %}?v={{ STATIC_VERSION }}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/sidebar.css' %}?v={{ STATIC_VERSION }}"
+    />
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    {% include "topbar.html" %}
+
+    <div class="layout">
+      {% include "estudiante/sidebar_alumno.html" %}
+
+      <main class="contenido">
+        {% if messages %}
+        <div class="mensajes">
+          {% for message in messages %}
+          <div class="mensaje mensaje--{{ message.tags }}" role="alert">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

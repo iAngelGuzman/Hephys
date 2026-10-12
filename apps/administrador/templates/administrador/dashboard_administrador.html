@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Trámites{% endblock %}
+
+{% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{% static 'administrador/css/tramites_administrador.css' %}"
+/>
+{% endblock %}
+
+{% block content %}
+<section class="tramites-page">
+  <h1>Trámites para configurar</h1>
+  <br />
+  <div class="tramites-grid">
+
+    <article class="tramite-card">
+      <header class="card-header">Exámenes extraordinarios y titulo de suficiencia</header>
+      <div class="card-body">
+        <p class="descripcion">
+          Gestiona el calendario de exámenes.
+        </p>
+      </div>
+      <a
+        href="{% url 'administrador:configurar_examenes' %}"
+        class="btn-solicitar"
+      >
+        Administrar
+      </a>
+    </article>
+    <article class="tramite-card">
+      <header class="card-header">Altas y bajas</header>
+      <div class="card-body">
+        <p class="descripcion">
+          Revisa y gestiona las solicitudes de altas y bajas de experiencias
+          educativas.
+        </p>
+      </div>
+      <a
+        href="{% url 'administrador:configurar_altas_bajas' %}"
+        class="btn-solicitar"
+      >
+        Administrar
+      </a>
+    </article>
+
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% load static %}
+
+<aside class="sidebar admin-sidebar">
+  <nav class="menu-superior">
+    
+    <a href="{% url 'administrador:dashboard' %}" class="menu-item">
+      <div class="menu {% if request.resolver_match.url_name == 'dashboard' %}activo{% endif %}">
+        <img src="{% static 'icons/home.png' %}" alt="Inicio" width="24" height="24" />
+      </div>
+      <span class="menu-texto"> Panel </span>
+    </a>
+
+    
+    <a href="{% url 'administrador:control_usuarios' %}" class="menu-item">
+      <div class="menu {% if 'usuarios' in request.resolver_match.url_name %}activo{% endif %}">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <span class="menu-texto"> Usuarios </span>
+    </a>
+
+    <a href="{% url 'administrador:solicitudes_pendientes' %}" class="menu-item">
+      <div class="menu {% if request.resolver_match.url_name == 'solicitudes_pendientes' %}activo{% endif %}">
+        <img src="{% static 'icons/google-docs.png' %}" alt="Solicitudes" width="24" height="24" />
+      </div>
+      <span class="menu-texto"> Solicitudes </span>
+    </a>
+
+    <a href="{% url 'administrador:historial_solicitudes' %}" class="menu-item">
+      <div class="menu {% if request.resolver_match.url_name == 'historial_solicitudes' %}activo{% endif %}">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <span class="menu-texto"> Historial Solicitudes</span>
+    </a>
+  </nav>
+</aside>

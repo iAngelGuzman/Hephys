@@ -1,0 +1,209 @@
+body {
+  background: #ffffff;
+}
+
+.contenido h1 {
+  color: #000000;
+  margin-bottom: 10px;
+  font-size: 46px;
+  text-align: center;
+}
+
+.busqueda input {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-size: 18px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(85, 83, 83, 0.312);
+  outline: none;
+}
+
+.busqueda input::placeholder {
+  color: #9ca3af;
+}
+
+.busqueda select {
+  width: 200px;
+  border: none;
+  border-radius: 20px;
+  padding: 15px;
+  font-size: 18px;
+}
+
+.tramites-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 690px);
+  gap: 15px;
+  justify-content: center;
+}
+
+.tramite-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tramite-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  min-height: 60px;
+  padding: 10px 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--azul);
+  color: white;
+
+  font-size: 23px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.card-body {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.card-body img {
+  width: 85px;
+  min-width: 85px;
+  height: 85px;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.descripcion {
+  flex: 1;
+  font-size: 18px;
+  line-height: 1.45;
+  color: #030303;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.btn-solicitar {
+  width: 195px;
+  height: 50px;
+
+  margin: auto auto 14px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #1f3a94;
+  color: white;
+  text-decoration: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  font-size: 19px;
+  font-weight: 600;
+
+  border-radius: 8px;
+
+  transition: 0.2s;
+  box-shadow: 0 4px 10px rgba(31, 58, 148, 0.25);
+}
+
+.btn-solicitar:hover {
+  background: #162b70;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(31, 94, 168, 0.35);
+}
+
+.sin-resultados {
+  width: 900%;
+  margin-top: 30px;
+  color: #6b7280;
+  font-size: 15px;
+  text-align: center;
+}
+
+.tramite-card.tramite-oculto {
+  opacity: 0.18;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+.tramite-card.tramite-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 900px) {
+  .tramites-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: 28px 18px;
+  }
+
+  h1 {
+    font-size: 27px;
+    text-align: center;
+  }
+
+  .busqueda {
+    width: 100%;
+    margin: 20px 0 28px;
+  }
+
+  .busqueda input {
+    width: 70%;
+    padding: 13px 16px;
+    font-size: 15px;
+    max-width: 900px;
+    min-width: 350px;
+  }
+
+  .tramites-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .card-header {
+    min-height: 80px;
+    font-size: 18px;
+    padding: 10px;
+  }
+
+  .card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+  }
+
+  .card-body img {
+    width: 64px;
+    min-width: 64px;
+    height: 64px;
+  }
+}

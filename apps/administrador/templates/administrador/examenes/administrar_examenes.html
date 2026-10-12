@@ -1,0 +1,174 @@
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block title %}Gestión de Exámenes{% endblock %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'administrador/css/gestionar_examenes.css' %}" />
+{% endblock %} 
+
+{% block mensajes %}
+{% if messages %}
+<div class="mensajes">
+  {% for message in messages %}
+    {% if "horario_subido" in message.tags %}
+      <template id="mensaje-horario-subido">{{ message }}</template>
+    {% elif message.level_tag == "error" %}
+      <div class="mensaje mensaje--error" role="alert" data-aviso-modal>{{ message }}</div>
+    {% else %}
+      <div class="mensaje mensaje--{{ message.level_tag }}" role="alert">{{ message }}</div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+  <header class="page-header page-header-fila">
+    <div>
+      <h1>Gestión de Horarios de Exámenes</h1>
+      <p class="subtitle">
+        Sube el horario general en PDF para cada programa educativo.
+      </p>
+    </div>
+
+    <a href="{% url 'administrador:dashboard' %}" class="btn-regresar">
+      <i class="bi bi-arrow-left"></i> Regresar
+    </a>
+  </header>
+
+  <div class="carreras-grid">
+    {% for carrera in carreras %}
+    <div class="card-square">
+      <div class="card-header-sq">
+        <h3>{{ carrera.nombre }} ({{ carrera.codigo }})</h3>
+        {% if carrera.tiene_horario %}
+        <span class="badge-cargado">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Horario cargado
+        </span>
+        {% endif %}
+      </div>
+      <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="card-body-sq form-horario"
+        novalidate
+        data-carrera="{{ carrera.codigo }}"
+        {% if carrera.tiene_horario %}data-existe{% endif %}
+      >
+        {% csrf_token %}
+        <input type="hidden" name="carrera_code" value="{{ carrera.codigo }}" />
+
+        <div class="form-group-sq">
+          <label for="pdf_{{ carrera.codigo|lower }}">Horario de exámenes (PDF):</label>
+          <div class="file-upload-wrapper">
+            <input
+              type="file"
+              id="pdf_{{ carrera.codigo|lower }}"
+              name="archivo_horario"
+              accept=".pdf"
+              required
+              class="form-control input-file-sq"
+            />
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button type="submit" class="btn-primary-sq">Publicar Horario</button>
+          {% if carrera.tiene_horario %}
+          <button
+            type="button"
+            class="btn-quitar-sq"
+            data-quitar-horario="{{ carrera.codigo }}"
+            data-nombre="{{ carrera.nombre }} ({{ carrera.codigo }})"
+          >
+            Quitar horario
+          </button>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form
+    id="form-eliminar-horario"
+    method="POST"
+    action="{% url 'administrador:eliminar_horario_examenes' %}"
+    hidden
+  >
+    {% csrf_token %}
+    <input type="hidden" name="carrera_code" id="eliminar-carrera-code" value="" />
+  </form>
+
+  <div id="modal-confirmar-subida" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Ya existe un horario cargado</h2>
+      <p id="texto-confirmar-subida"></p>
+      <div class="modal-botones">
+        <button type="button" class="btn-cancelar-modal" data-cerrar-modal>
+          Cancelar
+        </button>
+        <button type="button" class="btn-confirmar-modal" id="btn-confirmar-subida">
+          Sí, reemplazar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-confirmar-eliminar" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Quitar horario de exámenes</h2>
+      <p id="texto-confirmar-eliminar"></p>
+      <div class="modal-botones">
+        <button type="button" class="btn-cancelar-modal" data-cerrar-modal>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-peligro-modal"
+          id="btn-confirmar-eliminar"
+        >
+          Sí, quitar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-aviso-horario" class="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="titulo-aviso-horario">
+  <div class="modal-box modal-exito">
+    <div class="modal-exito-icono modal-exito-icono--error">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="7" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    </div>
+    <h2 id="titulo-aviso-horario">No se puede publicar</h2>
+    <p id="texto-aviso-horario"></p>
+    <div class="modal-botones modal-botones-centro">
+      <button type="button" class="btn-confirmar-modal" id="btn-cerrar-aviso-horario">
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-horario-subido" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-horario-subido">
+  <div class="modal-box modal-exito">
+    <div class="modal-exito-icono">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h2 id="titulo-horario-subido">¡Horario publicado!</h2>
+    <p id="texto-horario-subido"></p>
+    <div class="modal-botones modal-botones-centro">
+      <button type="button" class="btn-confirmar-modal" id="btn-cerrar-horario-subido">
+        Aceptar
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/administrar_examenes.js' %}"></script>
+{% endblock %}

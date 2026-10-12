@@ -1,0 +1,89 @@
+.sidebar {
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  bottom: 0;
+  z-index: 900;
+  width: 85px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 100px 0 25px;
+
+  background: linear-gradient(
+    to bottom,
+    var(--azul-claro),
+    var(--azul-claro),
+    var(--verde-claro)
+  );
+}
+
+.menu-superior {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px; 
+  width: 100%;
+}
+
+.menu-item {
+  text-decoration: none;
+  color: inherit;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 100%;
+}
+
+.menu {
+  width: 65px;
+  height: 65px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 16px;
+  text-decoration: none;
+
+  transition: all 0.2s ease;
+}
+
+.menu:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.menu.activo {
+  background: #8fb3ca;
+}
+
+.menu img {
+  width: 41px;
+  height: 41px;
+  display: block;
+}
+
+.menu i {
+  font-size: 32px;
+  color: #000;
+}
+
+.menu-texto {
+  margin-top: 6px; 
+
+  color: #000;
+  font-size: 13px; 
+  font-weight: 700;
+  text-align: center;
+
+  width: 100%;
+}
+
+.logout {
+  margin-top: auto;
+}

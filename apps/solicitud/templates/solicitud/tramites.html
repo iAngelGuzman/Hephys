@@ -1,0 +1,52 @@
+{% extends "base.html" %} {% load static %} {% block title %} Trámites Escolares
+{% endblock %} {% block extra_css %}
+
+<link
+  rel="stylesheet"
+  href="{% static 'solicitud/css/tramites.css' %}"
+/>
+{% endblock %} {% block content %}
+<section class="tramites-page">
+  <h1>Trámites Escolares</h1>
+
+  <div class="busqueda">
+    <input
+      type="text"
+      id="buscador-tramites"
+      placeholder="Búsqueda por nombre"
+      autocomplete="off"
+    />
+  </div>
+  <br />
+
+  <div class="tramites-grid" id="tramites-grid">
+    {% for t in tramites %}
+
+    <article
+      class="tramite-card"
+      data-nombre="{{ t.titulo|lower }}"
+      data-descripcion="{{ t.descripcion|lower }}"
+    >
+      <header class="card-header">{{ t.titulo }}</header>
+
+      <div class="card-body">
+        <img src="{% static 'solicitud/img/'|add:t.icono %}" alt="{{ t.titulo }}" />
+
+        <p class="descripcion">{{ t.descripcion }}</p>
+      </div>
+
+      <button type="button" class="btn-solicitar">Solicitar</button>
+    </article>
+
+    {% endfor %}
+  </div>
+
+  <p id="sin-resultados" class="sin-resultados" hidden>
+    No se encontró ningún trámite con ese nombre.
+  </p>
+</section>
+
+{% endblock %} {% block extra_js %}
+
+<script src="{% static 'solicitud/js/tramites.js' %}"></script>
+{% endblock %}

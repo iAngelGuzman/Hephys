@@ -1,0 +1,17 @@
+<div class="stepper" aria-label="Progreso del trámite">
+  <div class="step {% if paso_actual >= 1 %}active{% endif %}">
+    <span>1</span>
+  </div>
+
+  <div class="line {% if paso_actual >= 2 %}active{% endif %}"></div>
+
+  <div class="step {% if paso_actual >= 2 %}active{% endif %}">
+    <span>2</span>
+  </div>
+
+  <div class="line {% if paso_actual >= 3 %}active{% endif %}"></div>
+
+  <div class="step {% if paso_actual >= 3 %}active{% endif %}">
+    <span>3</span>
+  </div>
+</div>

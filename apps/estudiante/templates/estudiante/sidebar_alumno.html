@@ -1,0 +1,40 @@
+{% load static %}
+
+<aside class="sidebar alumno-sidebar">
+  <nav class="menu-superior">
+    <a href="{% url 'solicitud:lista_tramites' %}" class="menu-item">
+      <div
+        class="menu {% if '/solicitudes/' in request.path or request.resolver_match.url_name == 'lista_tramites' %}activo{% endif %}"
+      >
+        <img
+          src="{% static 'icons/home.png' %}"
+          alt="Inicio"
+          width="24"
+          height="24"
+        />
+      </div>
+      <span class="menu-texto">Inicio</span>
+    </a>
+
+    <a href="{% url 'estudiante:mis_solicitudes' %}" class="menu-item">
+      <div
+        class="menu {% if request.resolver_match.url_name == 'mis_solicitudes' %}activo{% endif %}"
+      >
+        <img
+          src="{% static 'icons/google-docs.png' %}"
+          alt="Trámites"
+          width="24"
+          height="24"
+        />
+      </div>
+      <span class="menu-texto">Solicitudes</span>
+    </a>
+
+    <a href="{% url 'estudiante:historial_solicitudes' %}" class="menu-item">
+      <div class="menu {% if request.resolver_match.url_name == 'historial_solicitudes' %}activo{% endif %}">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <span class="menu-texto">Historial</span>
+    </a>
+  </nav>
+</aside>

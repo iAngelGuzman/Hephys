@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Subir Oferta Educativa{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'administrador/css/subir_oferta.css' %}" />
+{% endblock %}
+
+{% block content %}
+<section class="tramites-page section-subir-oferta">
+    <h1>Subir Oferta Educativa por PDF</h1>
+    <p class="descripcion">Sube el archivo PDF oficial con la estructura de horarios y bloques. El sistema procesará automáticamente las materias y los NRCs.</p>
+
+
+    <div class="card-formulario-oferta">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="campo-grupo">
+                <label class="campo-label">
+                    {{ form.archivo_pdf.label }}
+                </label>
+                {{ form.archivo_pdf }}
+                <small class="campo-ayuda">
+                    Formatos permitidos: PDF.
+                </small>
+            </div>
+
+            <div class="acciones-formulario">
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-upload"></i> Procesar y Subir Oferta
+                </button>
+                <a href="{% url 'administrador:configurar_altas_bajas' %}" class="btn-regresar">
+                    Regresar
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
