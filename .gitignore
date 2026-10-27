@@ -32,10 +32,23 @@ htmlcov/
 # Volcados de base de datos y fixtures con datos reales (contienen PII)
 *.sql
 datos.json
+# El script de ESTRUCTURA sí se versiona (no contiene datos de alumnos)
+!database/*.sql
 
 # Documentos subidos por alumnos (horarios y papeletas)
 Papeles/
 media/
+
+# Documentos sensibles y resoluciones (CA-01/CA-04: nunca en git).
+# Solo se versionan las carpetas vacías y su README; los archivos subidos no.
+storage/*
+!storage/README.md
+!storage/secure_uploads/
+!storage/resoluciones/
+storage/secure_uploads/*
+!storage/secure_uploads/.gitkeep
+storage/resoluciones/*
+!storage/resoluciones/.gitkeep
 
 # Salida de `collectstatic` (se genera en el deploy, nunca se versiona)
 staticfiles/

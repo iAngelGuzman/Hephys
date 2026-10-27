@@ -1,0 +1,1324 @@
+{
+  "info": {
+    "_postman_id": "b6b0b6f2-6f8b-4d1a-9d0e-4d5f3b1a7c21",
+    "name": "Hephys — Pruebas funcionales",
+    "description": "Colección para probar los endpoints reales de Hephys contra el servidor local o Render.\n\nHephys es una aplicación renderizada en el servidor (no es una API REST): las respuestas son HTML y la sesión viaja en cookies. La colección obtiene el token CSRF, inicia sesión y conserva la cookie de sesión automáticamente.\n\nAntes de ejecutar, edita las variables de la colección (matrícula, usuarios y contraseñas). Ejecuta las carpetas en orden: cada inicio de sesión cambia el usuario de la sesión.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string",
+      "description": "URL del servidor (local o Render)."
+    },
+    {
+      "key": "matriculaAlumno",
+      "value": "S24000001",
+      "type": "string",
+      "description": "Matrícula de un alumno registrado."
+    },
+    {
+      "key": "passwordAlumno",
+      "value": "CAMBIAR",
+      "type": "string",
+      "description": "Contraseña del alumno."
+    },
+    {
+      "key": "usuarioSecretaria",
+      "value": "secretaria",
+      "type": "string",
+      "description": "Usuario (nómina) de una secretaria de grupo."
+    },
+    {
+      "key": "passwordSecretaria",
+      "value": "CAMBIAR",
+      "type": "string",
+      "description": "Contraseña de la secretaria."
+    },
+    {
+      "key": "usuarioAdministrador",
+      "value": "admin",
+      "type": "string",
+      "description": "Usuario con rol administrador (Secretaría Académica)."
+    },
+    {
+      "key": "passwordAdministrador",
+      "value": "CAMBIAR",
+      "type": "string",
+      "description": "Contraseña del administrador."
+    },
+    {
+      "key": "usuarioSuper",
+      "value": "admin",
+      "type": "string",
+      "description": "Superusuario para el admin de Django."
+    },
+    {
+      "key": "passwordSuper",
+      "value": "CAMBIAR",
+      "type": "string",
+      "description": "Contraseña del superusuario."
+    },
+    {
+      "key": "csrfToken",
+      "value": "",
+      "type": "string",
+      "description": "Se llena solo al abrir el formulario de login."
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Sin sesión",
+      "description": "Debe ejecutarse antes de cualquier login.",
+      "item": [
+        {
+          "name": "Alumno sin sesión → login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/estudiante/mis-solicitudes/",
+            "description": "Sin sesión, Django redirige al login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Redirige al login o lo muestra', () => {",
+                  "  pm.expect([200, 302]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Formulario de login visible', () => {",
+                  "    pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · Salud",
+      "description": "Sonda usada por Render y los monitores.",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Base de datos operativa', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('ok');",
+                  "  pm.expect(body.database).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /health/",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Base de datos operativa', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('ok');",
+                  "  pm.expect(body.database).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Sesión alumno",
+      "description": "Login y pantallas del rol alumno.",
+      "item": [
+        {
+          "name": "0. Cerrar sesión previa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Deja la sesión en anónimo para que la carpeta funcione aunque se ejecute después de otra. Si ya no hay sesión, Django solo redirige al login.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtiene un token CSRF válido aunque la sesión anterior siga abierta.",
+                  "pm.sendRequest(pm.variables.replaceIn('{{baseUrl}}/login/'), function (err, res) {",
+                  "  const csrf = pm.cookies.get('csrftoken');",
+                  "  if (csrf) {",
+                  "    pm.collectionVariables.set('csrfToken', csrf);",
+                  "  }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión anterior cerrada o ya era anónima', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1. Obtener CSRF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login/",
+            "description": "Abre el formulario y guarda la cookie csrftoken."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Cookie csrftoken disponible', () => {",
+                  "  pm.expect(csrf, 'cookie csrftoken').to.be.a('string');",
+                  "  pm.expect(csrf.length).to.be.above(10);",
+                  "});",
+                  "pm.test('Formulario de login visible', () => {",
+                  "  pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/login/",
+            "description": "Envía el formulario de login. Django exige el token CSRF en el cuerpo y en el encabezado X-CSRFToken. La cookie de sesión la guarda Postman automáticamente.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "matricula",
+                  "value": "{{matriculaAlumno}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordAlumno}}",
+                  "type": "text"
+                },
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credenciales aceptadas', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Llegó al panel del rol', () => {",
+                  "    pm.expect(pm.response.text()).to.include('Trámites Escolares');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Redirige al panel del rol', () => {",
+                  "    const location = pm.response.headers.get('Location') || '';",
+                  "    pm.expect(location).to.include('/solicitudes/lista-tramites/');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Lista de trámites",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/solicitudes/lista-tramites/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Trámites Escolares');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Mis solicitudes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/estudiante/mis-solicitudes/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Mis solicitudes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Historial",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/estudiante/historial/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Historial de solicitudes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Alumno no entra al panel administrativo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/",
+            "description": "Comprueba que @rol_requerido bloquea a un alumno en las vistas de la Secretaría Académica."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 Forbidden por rol', () => {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Django 6 solo acepta POST para cerrar sesión.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión cerrada', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Vuelve al login', () => {",
+                  "    pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Sesión secretaría",
+      "description": "Login y pantallas del rol secretaria de grupo.",
+      "item": [
+        {
+          "name": "0. Cerrar sesión previa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Deja la sesión en anónimo para que la carpeta funcione aunque se ejecute después de otra. Si ya no hay sesión, Django solo redirige al login.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtiene un token CSRF válido aunque la sesión anterior siga abierta.",
+                  "pm.sendRequest(pm.variables.replaceIn('{{baseUrl}}/login/'), function (err, res) {",
+                  "  const csrf = pm.cookies.get('csrftoken');",
+                  "  if (csrf) {",
+                  "    pm.collectionVariables.set('csrfToken', csrf);",
+                  "  }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión anterior cerrada o ya era anónima', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1. Obtener CSRF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Cookie csrftoken disponible', () => {",
+                  "  pm.expect(csrf, 'cookie csrftoken').to.be.a('string');",
+                  "  pm.expect(csrf.length).to.be.above(10);",
+                  "});",
+                  "pm.test('Formulario de login visible', () => {",
+                  "  pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/login/",
+            "description": "Envía el formulario de login. Django exige el token CSRF en el cuerpo y en el encabezado X-CSRFToken. La cookie de sesión la guarda Postman automáticamente.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "matricula",
+                  "value": "{{usuarioSecretaria}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordSecretaria}}",
+                  "type": "text"
+                },
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credenciales aceptadas', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Llegó al panel del rol', () => {",
+                  "    pm.expect(pm.response.text()).to.include('Lista de solicitudes');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Redirige al panel del rol', () => {",
+                  "    const location = pm.response.headers.get('Location') || '';",
+                  "    pm.expect(location).to.include('/secretaria/');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Panel de revisión",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/secretaria/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Lista de solicitudes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Historial",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/secretaria/historial-solicitudes/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Lista de solicitudes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Django 6 solo acepta POST para cerrar sesión.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión cerrada', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Vuelve al login', () => {",
+                  "    pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · Sesión administración",
+      "description": "Login y pantallas de la Secretaría Académica.",
+      "item": [
+        {
+          "name": "0. Cerrar sesión previa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Deja la sesión en anónimo para que la carpeta funcione aunque se ejecute después de otra. Si ya no hay sesión, Django solo redirige al login.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtiene un token CSRF válido aunque la sesión anterior siga abierta.",
+                  "pm.sendRequest(pm.variables.replaceIn('{{baseUrl}}/login/'), function (err, res) {",
+                  "  const csrf = pm.cookies.get('csrftoken');",
+                  "  if (csrf) {",
+                  "    pm.collectionVariables.set('csrfToken', csrf);",
+                  "  }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión anterior cerrada o ya era anónima', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1. Obtener CSRF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Cookie csrftoken disponible', () => {",
+                  "  pm.expect(csrf, 'cookie csrftoken').to.be.a('string');",
+                  "  pm.expect(csrf.length).to.be.above(10);",
+                  "});",
+                  "pm.test('Formulario de login visible', () => {",
+                  "  pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/login/",
+            "description": "Envía el formulario de login. Django exige el token CSRF en el cuerpo y en el encabezado X-CSRFToken. La cookie de sesión la guarda Postman automáticamente.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "matricula",
+                  "value": "{{usuarioAdministrador}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordAdministrador}}",
+                  "type": "text"
+                },
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credenciales aceptadas', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Llegó al panel del rol', () => {",
+                  "    pm.expect(pm.response.text()).to.include('Trámites para configurar');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Redirige al panel del rol', () => {",
+                  "    const location = pm.response.headers.get('Location') || '';",
+                  "    pm.expect(location).to.include('/administrador/');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Panel de configuración",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Trámites para configurar');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Control de usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/usuarios/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Control de Usuarios');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Solicitudes pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/pendientes/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Lista de solicitudes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Configurar altas y bajas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/configurar-altas-bajas/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Configuración de Altas y Bajas');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Configurar exámenes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/configurar-examenes/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Gestión de Horarios de Exámenes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Gestión de cupos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/gestion-cupos/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Gestión de Cupos');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Subir oferta educativa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/subir-oferta/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Subir Oferta Educativa por PDF');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Historial académico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador/historial/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('Historial de Solicitudes Académicas');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/logout/",
+            "description": "Django 6 solo acepta POST para cerrar sesión.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión cerrada', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Vuelve al login', () => {",
+                  "    pm.expect(pm.response.text()).to.include('name=\"matricula\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Admin de Django",
+      "description": "Requiere un superusuario (manage.py createsuperuser). El admin de Django usa el campo 'username', no la matrícula.",
+      "item": [
+        {
+          "name": "1. Obtener CSRF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/login/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Cookie csrftoken disponible', () => {",
+                  "  pm.expect(csrf, 'cookie csrftoken').to.be.a('string');",
+                  "  pm.expect(csrf.length).to.be.above(10);",
+                  "});",
+                  "pm.test('Formulario del admin visible', () => {",
+                  "  pm.expect(pm.response.text()).to.include('name=\"username\"');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/login/",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{usuarioSuper}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordSuper}}",
+                  "type": "text"
+                },
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "next",
+                  "value": "/admin/",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Acceso al admin', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Índice del admin visible', () => {",
+                  "    pm.expect(pm.response.text()).to.include('/admin/');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Redirige al índice', () => {",
+                  "    const location = pm.response.headers.get('Location') || '';",
+                  "    pm.expect(location).to.include('/admin/');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Índice del admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Contenido esperado', () => {",
+                  "  pm.expect(pm.response.text()).to.include('/admin/');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Cerrar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/logout/",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfmiddlewaretoken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const csrf = pm.cookies.get('csrftoken');",
+                  "if (csrf) {",
+                  "  pm.collectionVariables.set('csrfToken', csrf);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión del admin cerrada', () => {",
+                  "  pm.expect([200, 302, 303]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,8 @@ from pathlib import Path
 
 from decouple import Csv, config
 
+from config.database import construir_bases_de_datos
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -47,11 +49,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "apps.estudiante",
-    "apps.usuario",
-    "apps.secretaria",
-    "apps.solicitud",
-    "apps.administrador",
+    # Una sola app de Django contiene las capas documentadas:
+    # app/models, app/controllers y app/views.
+    "app",
 ]
 
 MIDDLEWARE = [
@@ -61,6 +61,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Después de AuthenticationMiddleware: registra quién hace cada cambio
+    # de estado en bitacora_transaccional (HU-25).
+    "app.controllers.middleware.AuditoriaMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -90,35 +93,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------------------------------------------------------------------
 # Base de datos
 # ---------------------------------------------------------------------------
-# USE_SQLITE=True en el .env  -> SQLite local (db.sqlite3), sin internet.
-# USE_SQLITE=False o ausente  -> MySQL con las variables DB_* del .env.
+# La configuración vive en config/database.py (capa de conexión centralizada).
+# Siempre MySQL con las variables DB_* del .env.
 # DB_SSL=True                 -> exige conexión cifrada (necesario en Aiven).
 
-USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)
-
-if USE_SQLITE:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-else:
-    opciones_mysql = {"charset": "utf8mb4"}
-    if config("DB_SSL", default=False, cast=bool):
-        opciones_mysql["ssl_mode"] = "REQUIRED"
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": config("DB_NAME"),
-            "USER": config("DB_USER"),
-            "PASSWORD": config("DB_PASSWORD"),
-            "HOST": config("DB_HOST", default="localhost"),
-            "PORT": config("DB_PORT", default="3306"),
-            "OPTIONS": opciones_mysql,
-        }
-    }
+DATABASES = construir_bases_de_datos(BASE_DIR)
 
 
 # ---------------------------------------------------------------------------
@@ -140,7 +119,7 @@ CACHES = {
 # Autenticación
 # ---------------------------------------------------------------------------
 
-AUTH_USER_MODEL = "usuario.User"
+AUTH_USER_MODEL = "app.User"
 
 # A dónde manda @login_required (y @rol_requerido) cuando no hay sesión.
 LOGIN_URL = "usuario:login"
@@ -179,7 +158,10 @@ USE_TZ = True
 # ---------------------------------------------------------------------------
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# public/ es el directorio raíz documentado (Semana 1 y 2): ahí viven todos
+# los recursos estáticos, compartidos y por módulo.
+STATICFILES_DIRS = [BASE_DIR / "public" / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Manifest: collectstatic agrega un hash al nombre de cada archivo
@@ -203,11 +185,17 @@ STORAGES = {
 # ---------------------------------------------------------------------------
 # Los nombres de subcarpeta deben coincidir EXACTAMENTE (mayúsculas
 # incluidas) con los que usa guardar_archivo_temporal() en
-# apps/solicitud/services.py, porque en Linux (donde corre en producción)
+# app.controllers.servicios_solicitud.py, porque en Linux (donde corre en producción)
 # el sistema de archivos distingue mayúsculas de minúsculas.
 
 CARPETA_COMPROBANTES_PAGO = os.path.join(BASE_DIR, "Papeles", "comprobantes_pago")
 CARPETA_PAPELES_HORARIOS = os.path.join(BASE_DIR, "Papeles", "horarios")
+
+# Documentos sensibles (certificados, kárdex, programas) y resoluciones
+# finales. Viven FUERA de static/ y de MEDIA_ROOT para que no se puedan
+# descargar sin pasar por una vista que valide rol y propiedad (CA-01/CA-04).
+CARPETA_DOCUMENTOS_SEGUROS = os.path.join(BASE_DIR, "storage", "secure_uploads")
+CARPETA_RESOLUCIONES = os.path.join(BASE_DIR, "storage", "resoluciones")
 
 
 # ---------------------------------------------------------------------------

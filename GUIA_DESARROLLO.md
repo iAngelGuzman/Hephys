@@ -33,19 +33,20 @@ tiene su botón **Solicitar**, pero el botón todavía no lleva a ningún lado. 
 **Lo que ya existe y puedes reutilizar.** La lógica de negocio de los trámites
 se dejó en el proyecto; solo se quitaron las vistas, URLs y plantillas.
 
-- `apps/solicitud/models.py`: el modelo `Solicitud` ya tiene todos los campos y
+- `app/models/solicitud.py`: el modelo `Solicitud` ya tiene todos los campos y
   estados (fechas de inasistencia, motivo de constancia, motivo de baja,
-  documento médico, etc.). **No hace falta crear migraciones para empezar.**
-- `apps/solicitud/reglas.py`: reglas para saber si el periodo está abierto,
+  documento médico, etc.).
+- `app/controllers/reglas.py`: reglas para saber si el periodo está abierto,
   el límite de bajas, los créditos mínimos, los cruces de horario y el plazo
   del justificante.
-- `apps/solicitud/services.py`: funciones que crean las solicitudes
+- `app/controllers/servicios_solicitud.py`: funciones que crean las solicitudes
   (`crear_solicitudes_examen`, `crear_solicitudes_alta`,
   `crear_solicitudes_baja`, `crear_solicitud_constancia`,
   `crear_solicitud_justificante`) y que procesan el horario y las papeletas.
-- `apps/solicitud/forms.py`: formularios de horario, papeleta, constancia y
-  justificante.
-- `apps/solicitud/utils.py` y `lectores_pdf.py`: lectura del horario en PDF.
+- `app/views/forms/solicitud.py`: formularios de horario, papeleta, constancia
+  y justificante.
+- `app/controllers/utils_solicitud.py` y `app/controllers/lectores_pdf.py`:
+  lectura del horario en PDF.
 
 Lee esos archivos antes de escribir lógica nueva: es probable que lo que
 necesitas ya esté ahí.
@@ -54,22 +55,48 @@ necesitas ya esté ahí.
 
 ## 2. Cómo está organizado el código
 
-Cada carpeta dentro de `apps/` es una app de Django con la misma forma:
+Hephys tiene **una sola app de Django** llamada `app`. Dentro de ella se
+separan las tres capas documentadas:
 
 ```text
-apps/<app>/
-├── models.py       # Tablas de la base de datos
-├── views.py        # o views/<archivo>.py: reciben la petición y devuelven una página
-├── urls.py         # Rutas de la app
-├── forms.py        # Validación de lo que el usuario envía
-├── services.py     # Operaciones que guardan o modifican datos
-├── reglas.py       # Reglas de negocio (solo consultan y validan, no guardan)
-├── constants.py    # Números y textos fijos (límites, motivos, etc.)
-├── templates/<app>/...
-└── static/<app>/css|js|img/...
+app/
+├── models/         # Tablas de la base de datos
+│   ├── usuario.py
+│   ├── estudiante.py
+│   ├── secretaria.py
+│   ├── solicitud.py
+│   └── administrador.py
+├── controllers/    # Operaciones que guardan o modifican datos
+│   ├── servicios_solicitud.py
+│   ├── servicios_administracion.py
+│   ├── reglas.py
+│   ├── auditoria.py
+│   ├── validadores.py
+│   ├── lectores_pdf.py
+│   ├── decoradores.py
+│   ├── limite_intentos.py
+│   ├── middleware.py
+│   └── signals.py
+└── views/          # Reciben la petición y devuelven una página
+    ├── autenticacion.py
+    ├── estudiante.py
+    ├── secretaria.py
+    ├── administracion.py
+    ├── tramites.py
+    └── forms/      # Validación de lo que el usuario envía
 ```
 
+Las plantillas están en `templates/` y los estáticos en `public/static/`.
+Las rutas se reparten en `config/urls/` y las pruebas en `tests/`.
+
 **Regla de capas:** la vista debe ser delgada.
+
+> **Estructura base documentada (Semana 1 y 2).** `app/controllers`,
+> `app/models` y `app/views` son carpetas reales, no fachadas. `config/`
+> centraliza la conexión MySQL y el enrutamiento, `public/static/` guarda los
+> estáticos, `storage/secure_uploads/` queda reservada para documentos
+> sensibles y `tests/` contiene las pruebas. El mapeo completo está en
+> [`ESTRUCTURA.md`](ESTRUCTURA.md).
 
 1. La **vista** recibe la petición, usa un **form** para validar y llama a
    **services** para guardar.
@@ -90,18 +117,17 @@ Ejemplo: activar **Constancia de estudios**.
 
 ### 3.1 La vista
 
-Crea `apps/solicitud/views/constancias.py`:
+Crea `app/views/constancias.py`:
 
 ```python
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.estudiante.models import Estudiante
-from apps.usuario.decorators import rol_requerido
-from apps.usuario.models import User
-
-from ..exceptions import TramiteNoPermitidoError
-from ..forms import SolicitudConstanciaForm
+from app.models.estudiante import Estudiante
+from app.controllers.decoradores import rol_requerido
+from app.models.usuario import User
+from app.controllers.excepciones_solicitud import TramiteNoPermitidoError
+from app.views.forms.solicitud import SolicitudConstanciaForm
 
 
 @rol_requerido(User.Rol.ALUMNO)
@@ -115,7 +141,7 @@ def solicitar_constancia(request):
     form = SolicitudConstanciaForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         try:
-            # Llama aquí a la función de services.py que crea la solicitud.
+            # Llama aquí a la función de servicios_solicitud.py que crea la solicitud.
             ...
         except TramiteNoPermitidoError as error:
             messages.error(request, str(error))
@@ -131,27 +157,31 @@ def solicitar_constancia(request):
 **Siempre** pon `@rol_requerido(...)` en cada vista. Sin él, cualquiera
 podría entrar escribiendo la URL.
 
-### 3.2 Exportarla
+### 3.2 Registrarla en las rutas
 
-En `apps/solicitud/views/__init__.py`:
+En `config/urls/solicitud.py`:
 
 ```python
-from .comunes import lista_tramites
-from .constancias import informacion_constancia, solicitar_constancia
+from app.views.constancias import informacion_constancia, solicitar_constancia
 ```
+
+Y agrega los `path(...)` correspondientes. Si prefieres exponerla desde el
+paquete, agrega el nombre al `_MAPA` de `app/views/__init__.py`.
 
 ### 3.3 La URL
 
-En `apps/solicitud/urls.py`:
+En `config/urls/solicitud.py`:
 
 ```python
-path("constancia-estudios/", views.informacion_constancia, name="informacion_constancia"),
-path("constancia-estudios/solicitar/", views.solicitar_constancia, name="solicitar_constancia"),
+from app.views.constancias import informacion_constancia, solicitar_constancia
+
+path("constancia-estudios/", informacion_constancia, name="informacion_constancia"),
+path("constancia-estudios/solicitar/", solicitar_constancia, name="solicitar_constancia"),
 ```
 
 ### 3.4 La plantilla
 
-Créala en `apps/solicitud/templates/solicitud/constancias/` y extiende la base:
+Créala en `templates/solicitud/constancias/` y extiende la base:
 
 ```django
 {% extends "base.html" %}
@@ -163,11 +193,11 @@ Créala en `apps/solicitud/templates/solicitud/constancias/` y extiende la base:
 {% endblock %}
 ```
 
-Los archivos CSS y JS de esa pantalla van en `apps/solicitud/static/solicitud/`.
+Los archivos CSS y JS de esa pantalla van en `public/static/solicitud/`.
 
 ### 3.5 Activar el botón "Solicitar"
 
-En `apps/solicitud/views/comunes.py`, agrega `"url"` a la tarjeta del trámite:
+En `app/views/tramites.py`, agrega `"url"` a la tarjeta del trámite:
 
 ```python
 {
@@ -192,7 +222,7 @@ Los estilos de `.btn-solicitar` ya están en `tramites.css`.
 
 ### 3.6 Pruebas
 
-Agrega pruebas en `apps/solicitud/tests.py`. La clase `BaseTramites` ya crea
+Agrega pruebas en `tests/test_solicitud.py`. La clase `BaseTramites` ya crea
 una secretaria y un alumno con sesión iniciada. Prueba por lo menos:
 
 - que la pantalla responde 200 para el alumno;
@@ -233,14 +263,35 @@ primero.
 
 **Base de datos**
 
-- Si cambias un modelo: `python manage.py makemigrations` y luego `migrate`,
-  y sube la migración junto con el cambio.
+- La conexión vive en `config/database.py`; no abras conexiones a MySQL en
+  vistas ni servicios. Las credenciales van en `.env`.
+- La fuente de verdad del esquema son los modelos: si cambias uno,
+  `python manage.py makemigrations`, luego `migrate`, y sube la migración
+  junto con el cambio. No edites a mano las tablas de MySQL.
+- Después de migrar, `python manage.py verificar_bd` comprueba la conexión,
+  `utf8mb4`, el modo estricto y que todo sea InnoDB.
 - Nunca borres ni edites migraciones que ya están en el repositorio.
+- Las tablas principales usan los nombres del modelo relacional documentado:
+  `usuarios`, `estudiantes`, `secretarias`, `tramites`,
+  `bitacora_transaccional` y `comprobantes_pago`. Las tablas de apoyo
+  (`app_periodotramite`, `app_calendariomatricula`,
+  `app_experienciaeducativa`, `app_experienciaeducativaoferta`, `app_carrera`
+  y `app_horarioexamen`) se crean desde los modelos. El esquema final tiene 18
+  tablas (ver `database/README.md`).
+- La bitácora **no se edita ni se borra**: se llena sola con la señal
+  `post_save` de `Solicitud` y el `AuditoriaMiddleware`. Si necesitas registrar
+  un movimiento manual, usa `app.controllers.auditoria.registrar_movimiento()`.
+- Los archivos sensibles se guardan fuera de `public/`, `static/` y `media/`:
+  los justificantes en `CARPETA_JUSTIFICANTES`, las papeletas en
+  `CARPETA_COMPROBANTES_PAGO` y las resoluciones en `CARPETA_RESOLUCIONES`.
+  Se descargan mediante una vista con control de rol y propiedad.
+- Los cambios de estado deben hacerse con `transaction.atomic()`; la bitácora
+  se escribe en la misma transacción.
 
 **Lo que nunca se sube a git** (ya está en `.gitignore`)
 
-- `.env` (contiene contraseñas), `venv/`, `db.sqlite3`, `Papeles/` (documentos
-  de alumnos) y `staticfiles/`.
+- `.env` (contiene contraseñas), `venv/`, `Papeles/` (documentos de alumnos) y
+  `staticfiles/`.
 - Si por error se sube una contraseña, **cámbiala** de inmediato; borrar el
   archivo no basta, porque queda en el historial.
 
@@ -270,8 +321,8 @@ primero.
 5. En GitHub abre un *Pull Request* hacia `main` para que lo revisen antes de
    unirlo.
 
-Revisa siempre `git status` antes de `git add .`: si aparece `.env`,
-`db.sqlite3` o algo de `Papeles/`, no lo subas.
+Revisa siempre `git status` antes de `git add .`: si aparece `.env` o algo de
+`Papeles/`, no lo subas.
 
 ---
 
@@ -281,9 +332,9 @@ Revisa siempre `git status` antes de `git add .`: si aparece `.env`,
 |---|---|
 | `venv\Scripts\activate` → "no se encuentra la ruta" | El entorno no existe todavía: `python -m venv venv`. |
 | `ModuleNotFoundError: No module named 'django'` | No activaste el entorno virtual o falta `pip install -r requirements.txt`. |
-| Falla la instalación de `mysqlclient` | Usa SQLite (`USE_SQLITE=True`) o instala MySQL Connector/C. |
+| Falla la instalación de `mysqlclient` | Instala MySQL Connector/C (librerías de desarrollo) y reinstala con `pip install -r requirements.txt`. |
 | `SECRET_KEY not found` | Falta el archivo `.env` (cópialo de `.env.example`). |
-| `Unknown database 'sistema'` | Crea la base en MySQL Workbench antes de `migrate`. |
+| `Unknown database 'hephys_db'` | Crea la base con `mysql -u root -p < database/crear_base.sql` antes de `migrate`. |
 | `TemplateDoesNotExist` | Revisa la ruta y que el nombre esté en minúsculas. |
 | `NoReverseMatch` | Usaste en `{% url %}` o `redirect()` un nombre de URL que no existe en `urls.py`. |
 | 403 al entrar a una página | El usuario no tiene el rol que pide `@rol_requerido`. |
